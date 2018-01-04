@@ -22,10 +22,12 @@ sim_coef_tall <- data.frame(dose=rep(c(1,3,10),each=length(sim_coef)),
                             obs_log_hr = rep(coef(ofit)[1:3],each=length(sim_coef)),
                             sim_loghr = as.vector(t(bind_rows(sim_coef))[,1:3]))
 
-sim_coef_tall %>%
+log_hr_plot = sim_coef_tall %>%
   ggplot(aes(x=sim_loghr)) +
   geom_histogram(fill='white',col='black',bins=30) +
   geom_vline(aes(xintercept=obs_log_hr),col='red') +
   facet_grid(dose~., labeller='label_both') +
   theme_bw() +
   labs(x='log hazard ratio')
+
+ggsave(log_hr_plot,height=8,width=6,filename = 'logHRplot_model1.png')
