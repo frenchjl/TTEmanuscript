@@ -1,5 +1,5 @@
 # TTEmanuscript
 
-Working files for the ISOP time-to-event manuscript.  This is still very much a work-in-progress.
+Last updated 3/16/2018 
 
-Here's a link to the Google Doc: https://drive.google.com/open?id=0B7Dmv3A9Rf-DOHdidVZHTjJFdzQ
+Here's a link to the Google Doc: https://drive.google.com/open?id=1JlC9Pkl5efY77zQFHK8lMllHEbgEJeVi
