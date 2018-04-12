@@ -5,29 +5,43 @@ library(dplyr)
 library(survival)
 library(purrr)
 
+rm(list=ls())
+
 odat <- read_csv('final_mod/run6/TTEdat_v11.csv') %>%
   filter(STIME==0)
 
 ofit <- coxph(Surv(TIME,DV)~as.factor(dose)+x, data=odat)
 
+load('TTE_simulated_data_model_runs1_8.RData')
 
 
-simdat <- read_csv('final_mod/simulatedTimesForVPC.csv')
+sim_coef <- lapply(list(sim1,sim3,sim5), function(simdat){
+  simdat %>% 
+  split(.$simNumber) %>%
+  map( ~ coef(coxph(Surv(TIME,DV)~as.factor(DOSE)+GENDER,data=.)))
+})
 
-sim_coef <- simdat %>% 
-  split(.$irep) %>%
-  map( ~ coef(coxph(Surv(simTIME,simDV)~as.factor(DOSE)+X,data=.)))
 
-sim_coef_tall <- data.frame(dose=rep(c(1,3,10),each=length(sim_coef)),
-                            obs_log_hr = rep(coef(ofit)[1:3],each=length(sim_coef)),
-                            sim_loghr = as.vector(t(bind_rows(sim_coef))[,1:3]))
+sim_coef_tall <- lapply(sim_coef, function(ests) {
+  data.frame(dose=rep(c(1,3,10),each=length(ests)),
+             obs_log_hr = rep(coef(ofit)[1:3],each=length(ests)),
+             sim_loghr = as.vector(t(bind_rows(ests))[,1:3]))
+}) %>%
+  bind_rows(.id='model') %>%
+  ungroup()
+sim_coef_tall = sim_coef_tall %>%
+  mutate(model = factor(model,labels=c('Model 1','Model 3','Model 5')),
+         group = factor(paste(sim_coef_tall$dose,'mg vs placebo'),
+                        levels=paste(sort(unique(dose)),'mg vs placebo')))
 
 log_hr_plot = sim_coef_tall %>%
   ggplot(aes(x=sim_loghr)) +
   geom_histogram(fill='white',col='black',bins=30) +
-  geom_vline(aes(xintercept=obs_log_hr),col='red') +
-  facet_grid(dose~., labeller='label_both') +
+  #geom_vline(aes(xintercept=obs_log_hr),col='red') +
+  facet_grid(model~group, labeller=label_value) +
   theme_bw() +
-  labs(x='log hazard ratio')
+  labs(x='log hazard ratio') 
 
-ggsave(log_hr_plot,height=8,width=6,filename = 'logHRplot_model1.png')
+log_hr_plot
+
+ggsave(log_hr_plot,height=8,width=6,filename = 'logHRplot_models135.png')
